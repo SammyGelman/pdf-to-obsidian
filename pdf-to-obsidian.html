@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to Obsidian Note Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #f8f6f1;
+            --bg-secondary: #ffffff;
+            --text-primary: #2a2420;
+            --text-secondary: #6b6158;
+            --accent: #d4766f;
+            --accent-dark: #b35c55;
+            --border: #e4dfd6;
+            --shadow: rgba(42, 36, 32, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.6s ease;
+        }
+
+        h1 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 4px 20px var(--shadow);
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.6s ease;
+            animation-fill-mode: both;
+        }
+
+        .card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .card:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .section-title {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: var(--bg-primary);
+        }
+
+        .drop-zone:hover {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, var(--bg-primary) 0%, rgba(212, 118, 111, 0.05) 100%);
+        }
+
+        .drop-zone.active {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, rgba(212, 118, 111, 0.08) 0%, rgba(212, 118, 111, 0.15) 100%);
+            transform: scale(1.02);
+        }
+
+        .drop-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.6;
+        }
+
+        .drop-text {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .drop-subtext {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .template-selector {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.875rem 2rem;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'DM Sans', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: var(--accent-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212, 118, 111, 0.3);
+        }
+
+        .btn:disabled {
+            background: var(--border);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            display: none;
+        }
+
+        .status.info {
+            background: #e8f4f8;
+            color: #1e6b8c;
+            border-left: 4px solid #1e6b8c;
+        }
+
+        .status.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #2e7d32;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #c62828;
+        }
+
+        .preview {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            max-height: 500px;
+            overflow-y: auto;
+            line-height: 1.6;
+            display: none;
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .spinner {
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--accent);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .file-info {
+            display: none;
+            background: var(--bg-primary);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .file-name {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .file-size {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📄 PDF to Obsidian</h1>
+            <p class="subtitle">Extract metadata from research papers and generate ready-to-use Obsidian notes</p>
+        </header>
+
+        <div class="card">
+            <h2 class="section-title">1. Choose Your Template</h2>
+            <div class="template-selector">
+                <label for="template">Research Domain</label>
+                <select id="template">
+                    <option value="gnn-medical">GNN + Medical AI (EHR)</option>
+                    <option value="ml-general">Machine Learning (General)</option>
+                    <option value="biology">Biology/Life Sciences</option>
+                    <option value="custom">Custom Template</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">2. Upload Research Paper</h2>
+            <div class="drop-zone" id="dropZone">
+                <div class="drop-icon">📎</div>
+                <div class="drop-text">Drop your PDF here or click to browse</div>
+                <div class="drop-subtext">Supports PDF files up to 10MB</div>
+            </div>
+            <input type="file" id="fileInput" accept=".pdf">
+            
+            <div class="file-info" id="fileInfo">
+                <div class="file-name" id="fileName"></div>
+                <div class="file-size" id="fileSize"></div>
+            </div>
+
+            <div class="status" id="status"></div>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">3. Generate & Download</h2>
+            <button class="btn" id="generateBtn" disabled>
+                <span>✨ Generate Obsidian Note</span>
+            </button>
+            
+            <div class="preview" id="preview"></div>
+            
+            <div class="actions" id="actions" style="display: none;">
+                <button class="btn" id="downloadBtn">
+                    <span>⬇️ Download .md File</span>
+                </button>
+                <button class="btn" id="copyBtn" style="background: var(--text-secondary);">
+                    <span>📋 Copy to Clipboard</span>
+                </button>
+            </div>
+        </div>
+
+        <footer>
+            <p>Built with ❤️ for researchers everywhere • <a href="https://github.com" target="_blank">View on GitHub</a></p>
+            <p style="margin-top: 0.5rem; font-size: 0.85rem;">Powered by Claude AI & PDF.js</p>
+        </footer>
+    </div>
+
+    <script>
+        // PDF.js setup
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // Templates
+        const templates = {
+            'gnn-medical': {
+                name: 'GNN + Medical AI (EHR)',
+                fields: ['title', 'authors', 'year', 'publication', 'type', 'gnn-architecture', 'medical-application', 'ehr-data-type', 'dataset', 'key-findings', 'read-status', 'tags'],
+                structure: `## Summary
+
+## Key Contributions
+- 
+
+## Methodology
+- 
+
+## Results
+- 
+
+## Limitations
+- 
+
+## Future Work
+- 
+
+## Personal Notes
+- `
+            },
+            'ml-general': {
+                name: 'Machine Learning (General)',
+                fields: ['title', 'authors', 'year', 'publication', 'type', 'ml-method', 'application-domain', 'dataset', 'metrics', 'read-status', 'tags'],
+                structure: `## Summary
+
+## Key Contributions
+- 
+
+## Methodology
+- 
+
+## Results
+- 
+
+## Notes
+- `
+            },
+            'biology': {
+                name: 'Biology/Life Sciences',
+                fields: ['title', 'authors', 'year', 'publication', 'type', 'research-area', 'organism', 'methods', 'key-findings', 'read-status', 'tags'],
+                structure: `## Summary
+
+## Key Findings
+- 
+
+## Methods
+- 
+
+## Implications
+- 
+
+## Notes
+- `
+            }
+        };
+
+        let currentFile = null;
+        let extractedText = '';
+        let generatedMarkdown = '';
+
+        // DOM elements
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const generateBtn = document.getElementById('generateBtn');
+        const status = document.getElementById('status');
+        const preview = document.getElementById('preview');
+        const actions = document.getElementById('actions');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const templateSelect = document.getElementById('template');
+
+        // Drop zone interactions
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('active');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('active');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('active');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        async function handleFile(file) {
+            if (file.type !== 'application/pdf') {
+                showStatus('Please upload a PDF file.', 'error');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                showStatus('File size must be less than 10MB.', 'error');
+                return;
+            }
+
+            currentFile = file;
+            fileName.textContent = file.name;
+            fileSize.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+            fileInfo.classList.add('show');
+            
+            showStatus('Extracting text from PDF...', 'info');
+            
+            try {
+                extractedText = await extractPDFText(file);
+                showStatus(`Successfully extracted text (${extractedText.length} characters)`, 'success');
+                generateBtn.disabled = false;
+            } catch (error) {
+                showStatus(`Error extracting PDF: ${error.message}`, 'error');
+                generateBtn.disabled = true;
+            }
+        }
+
+        async function extractPDFText(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let fullText = '';
+
+            // Extract text from first 10 pages (usually enough for metadata)
+            const numPages = Math.min(pdf.numPages, 10);
+            
+            for (let i = 1; i <= numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items.map(item => item.str).join(' ');
+                fullText += pageText + '\n';
+            }
+
+            return fullText;
+        }
+
+        generateBtn.addEventListener('click', async () => {
+            if (!extractedText) return;
+
+            const template = templates[templateSelect.value];
+            if (!template) {
+                showStatus('Please select a template', 'error');
+                return;
+            }
+
+            showStatus('Generating metadata with Claude AI...', 'info');
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<div class="spinner"></div><span>Processing...</span>';
+
+            try {
+                const metadata = await extractMetadata(extractedText, template);
+                generatedMarkdown = formatMarkdown(metadata, template);
+                
+                preview.textContent = generatedMarkdown;
+                preview.style.display = 'block';
+                actions.style.display = 'flex';
+                
+                showStatus('✨ Note generated successfully!', 'success');
+            } catch (error) {
+                showStatus(`Error generating note: ${error.message}`, 'error');
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '<span>✨ Generate Obsidian Note</span>';
+            }
+        });
+
+        async function extractMetadata(text, template) {
+            const prompt = `Extract metadata from this research paper text and return ONLY a JSON object with the following fields: ${template.fields.join(', ')}.
+
+Rules:
+- Return ONLY valid JSON, no explanation or markdown
+- For array fields (authors, tags, etc.), use arrays
+- For year, extract the publication year as a number
+- For tags, suggest 3-5 relevant tags based on the content
+- If a field cannot be determined, use null
+- Be concise and accurate
+
+Text excerpt:
+${text.substring(0, 4000)}
+
+Return the JSON now:`;
+
+            const response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    model: 'claude-sonnet-4-20250514',
+                    max_tokens: 1000,
+                    messages: [
+                        { role: 'user', content: prompt }
+                    ]
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`API request failed: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const content = data.content[0].text;
+            
+            // Clean up any markdown formatting
+            const jsonText = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+            
+            return JSON.parse(jsonText);
+        }
+
+        function formatMarkdown(metadata, template) {
+            let markdown = '---\n';
+            
+            for (const field of template.fields) {
+                const value = metadata[field];
+                if (value !== null && value !== undefined) {
+                    if (Array.isArray(value)) {
+                        markdown += `${field}: [${value.join(', ')}]\n`;
+                    } else if (typeof value === 'string') {
+                        markdown += `${field}: "${value}"\n`;
+                    } else {
+                        markdown += `${field}: ${value}\n`;
+                    }
+                }
+            }
+            
+            markdown += '---\n\n';
+            markdown += template.structure;
+            
+            return markdown;
+        }
+
+        downloadBtn.addEventListener('click', () => {
+            const blob = new Blob([generatedMarkdown], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            
+            // Create filename from title or use original PDF name
+            const match = generatedMarkdown.match(/title: "(.+?)"/);
+            const title = match ? match[1].replace(/[^a-z0-9]/gi, '-').toLowerCase() : currentFile.name.replace('.pdf', '');
+            
+            a.download = `${title}.md`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        copyBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(generatedMarkdown);
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<span>✓ Copied!</span>';
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                }, 2000);
+            } catch (error) {
+                showStatus('Failed to copy to clipboard', 'error');
+            }
+        });
+
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

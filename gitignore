@@ -1,0 +1,21 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test files
+test-pdfs/
+*.pdf
+
+# Node modules (if we add any tooling later)
+node_modules/
+
+# Environment variables
+.env
+.env.local
