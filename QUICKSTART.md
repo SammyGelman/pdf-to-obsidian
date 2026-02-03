@@ -1,9 +1,18 @@
 # Quick Start Guide 🚀
 
-## Getting Started in 3 Steps
+## Getting Started in 4 Steps
 
-### Step 1: Open the App
-Simply open `pdf-to-obsidian.html` in your web browser. No installation needed!
+### Step 0: Get Your API Key
+1. Go to [console.anthropic.com](https://console.anthropic.com/)
+2. Sign up or log in
+3. Navigate to API Keys
+4. Create a new key
+5. Copy it (starts with `sk-ant-`)
+
+### Step 1: Open the App & Configure
+1. Open `pdf-to-obsidian.html` in your web browser
+2. Enter your API key in the configuration panel
+3. Click "Save Key"
 
 ### Step 2: Upload Your PDF
 - Click the drop zone or drag and drop your research paper PDF
@@ -62,6 +71,19 @@ For multiple papers:
 ---
 
 ## Troubleshooting
+
+### "No API key configured"
+- Make sure you entered your Anthropic API key in the configuration panel
+- The key should start with `sk-ant-`
+- Click "Save Key" after entering it
+
+### "API request failed"
+- Your API key might be invalid - get a new one from console.anthropic.com
+- You might have hit rate limits - wait a few minutes
+- Check your internet connection
+
+### Want to hardcode your key?
+Click the "Want to hardcode your key?" button in the configuration panel for detailed instructions. This is great for personal use!
 
 ### "Error extracting PDF"
 - Make sure it's a valid PDF file

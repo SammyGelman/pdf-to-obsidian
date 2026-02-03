@@ -311,6 +311,144 @@
             font-size: 0.9rem;
             color: var(--text-secondary);
         }
+
+        .api-key-section {
+            background: linear-gradient(135deg, #fff9f0 0%, #fff 100%);
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .api-key-section h3 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--accent-dark);
+        }
+
+        .api-key-input-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .api-key-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: 'Courier New', monospace;
+            background: var(--bg-secondary);
+        }
+
+        .api-key-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .api-key-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .api-key-btn:hover {
+            background: var(--accent-dark);
+        }
+
+        .api-key-btn.secondary {
+            background: var(--text-secondary);
+        }
+
+        .api-key-status {
+            font-size: 0.9rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            margin-top: 0.5rem;
+        }
+
+        .api-key-status.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .api-key-status.warning {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .api-instructions {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-top: 1rem;
+        }
+
+        .api-instructions a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .api-instructions a:hover {
+            text-decoration: underline;
+        }
+
+        .api-instructions code {
+            background: var(--bg-primary);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+
+        .collapsible-section {
+            margin-top: 1rem;
+        }
+
+        .collapsible-toggle {
+            background: none;
+            border: none;
+            color: var(--accent);
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: underline;
+            padding: 0;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .collapsible-toggle:hover {
+            color: var(--accent-dark);
+        }
+
+        .collapsible-content {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            line-height: 1.8;
+        }
+
+        .collapsible-content.open {
+            display: block;
+        }
+
+        .collapsible-content pre {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+        }
     </style>
 </head>
 <body>
@@ -319,6 +457,48 @@
             <h1>📄 PDF to Obsidian</h1>
             <p class="subtitle">Extract metadata from research papers and generate ready-to-use Obsidian notes</p>
         </header>
+
+        <div class="card">
+            <h2 class="section-title">⚙️ API Configuration</h2>
+            <div class="api-key-section">
+                <h3>🔑 Anthropic API Key</h3>
+                <div class="api-key-input-group">
+                    <input 
+                        type="password" 
+                        id="apiKeyInput" 
+                        class="api-key-input" 
+                        placeholder="sk-ant-api03-..."
+                        autocomplete="off"
+                    >
+                    <button class="api-key-btn" id="saveApiKeyBtn">Save Key</button>
+                    <button class="api-key-btn secondary" id="clearApiKeyBtn">Clear</button>
+                </div>
+                <div class="api-key-status" id="apiKeyStatus" style="display: none;"></div>
+                
+                <div class="api-instructions">
+                    <p><strong>Need an API key?</strong> Get one from <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a></p>
+                    <p style="margin-top: 0.5rem;">Your key is stored locally in your browser and never sent anywhere except to Anthropic's API.</p>
+                </div>
+
+                <div class="collapsible-section">
+                    <button class="collapsible-toggle" id="hardcodeToggle">
+                        💻 Want to hardcode your key? Click here for instructions
+                    </button>
+                    <div class="collapsible-content" id="hardcodeInstructions">
+                        <p><strong>To hardcode your API key directly in the HTML file:</strong></p>
+                        <ol style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                            <li>Open <code>pdf-to-obsidian.html</code> in a text editor</li>
+                            <li>Find the line that says: <code>const HARDCODED_API_KEY = null;</code></li>
+                            <li>Replace <code>null</code> with your API key in quotes:
+                                <pre>const HARDCODED_API_KEY = 'sk-ant-api03-YOUR-KEY-HERE';</pre>
+                            </li>
+                            <li>Save the file</li>
+                        </ol>
+                        <p style="margin-top: 1rem; color: #e65100;"><strong>⚠️ Security Warning:</strong> Only hardcode your key if this file is for personal use only. Don't share or commit a file with your API key to GitHub!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="card">
             <h2 class="section-title">1. Choose Your Template</h2>
@@ -377,6 +557,60 @@
     <script>
         // PDF.js setup
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // =============================================================================
+        // API KEY CONFIGURATION
+        // =============================================================================
+        // To hardcode your API key, replace null with your key in quotes:
+        // const HARDCODED_API_KEY = 'sk-ant-api03-YOUR-KEY-HERE';
+        // 
+        // WARNING: Only hardcode if this file is for personal use!
+        // Never commit a file with your API key to GitHub or share it publicly.
+        // =============================================================================
+        const HARDCODED_API_KEY = null;
+        // =============================================================================
+
+        // API Key Management
+        function getApiKey() {
+            // Check for hardcoded key first
+            if (HARDCODED_API_KEY) {
+                return HARDCODED_API_KEY;
+            }
+            // Fall back to localStorage
+            return localStorage.getItem('anthropic_api_key');
+        }
+
+        function saveApiKey(key) {
+            localStorage.setItem('anthropic_api_key', key);
+            updateApiKeyStatus();
+        }
+
+        function clearApiKey() {
+            localStorage.removeItem('anthropic_api_key');
+            updateApiKeyStatus();
+        }
+
+        function updateApiKeyStatus() {
+            const statusDiv = document.getElementById('apiKeyStatus');
+            const apiKey = getApiKey();
+            
+            if (apiKey) {
+                const maskedKey = apiKey.substring(0, 12) + '...' + apiKey.substring(apiKey.length - 4);
+                statusDiv.className = 'api-key-status success';
+                statusDiv.textContent = `✓ API key configured: ${maskedKey}`;
+                statusDiv.style.display = 'block';
+                
+                // Enable generate button if file is uploaded
+                if (extractedText) {
+                    generateBtn.disabled = false;
+                }
+            } else {
+                statusDiv.className = 'api-key-status warning';
+                statusDiv.textContent = '⚠️ No API key configured. Please enter your Anthropic API key above.';
+                statusDiv.style.display = 'block';
+                generateBtn.disabled = true;
+            }
+        }
 
         // Templates
         const templates = {
@@ -456,6 +690,47 @@
         const downloadBtn = document.getElementById('downloadBtn');
         const copyBtn = document.getElementById('copyBtn');
         const templateSelect = document.getElementById('template');
+        
+        // API Key UI elements
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
+        const clearApiKeyBtn = document.getElementById('clearApiKeyBtn');
+        const hardcodeToggle = document.getElementById('hardcodeToggle');
+        const hardcodeInstructions = document.getElementById('hardcodeInstructions');
+
+        // Initialize API key status on page load
+        updateApiKeyStatus();
+
+        // API Key event listeners
+        saveApiKeyBtn.addEventListener('click', () => {
+            const key = apiKeyInput.value.trim();
+            if (key) {
+                if (key.startsWith('sk-ant-')) {
+                    saveApiKey(key);
+                    apiKeyInput.value = '';
+                } else {
+                    const statusDiv = document.getElementById('apiKeyStatus');
+                    statusDiv.className = 'api-key-status warning';
+                    statusDiv.textContent = '⚠️ Invalid API key format. Should start with "sk-ant-"';
+                    statusDiv.style.display = 'block';
+                }
+            }
+        });
+
+        clearApiKeyBtn.addEventListener('click', () => {
+            clearApiKey();
+            apiKeyInput.value = '';
+        });
+
+        hardcodeToggle.addEventListener('click', () => {
+            hardcodeInstructions.classList.toggle('open');
+        });
+
+        apiKeyInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                saveApiKeyBtn.click();
+            }
+        });
 
         // Drop zone interactions
         dropZone.addEventListener('click', () => fileInput.click());
@@ -505,7 +780,14 @@
             try {
                 extractedText = await extractPDFText(file);
                 showStatus(`Successfully extracted text (${extractedText.length} characters)`, 'success');
-                generateBtn.disabled = false;
+                
+                // Only enable generate button if API key is configured
+                if (getApiKey()) {
+                    generateBtn.disabled = false;
+                } else {
+                    generateBtn.disabled = true;
+                    showStatus(`Text extracted. Please configure your API key above to generate notes.`, 'warning');
+                }
             } catch (error) {
                 showStatus(`Error extracting PDF: ${error.message}`, 'error');
                 generateBtn.disabled = true;
@@ -561,6 +843,11 @@
         });
 
         async function extractMetadata(text, template) {
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                throw new Error('No API key configured. Please add your Anthropic API key in the configuration section.');
+            }
+
             const prompt = `Extract metadata from this research paper text and return ONLY a JSON object with the following fields: ${template.fields.join(', ')}.
 
 Rules:
@@ -580,6 +867,8 @@ Return the JSON now:`;
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'x-api-key': apiKey,
+                    'anthropic-version': '2023-06-01'
                 },
                 body: JSON.stringify({
                     model: 'claude-sonnet-4-20250514',
@@ -591,7 +880,8 @@ Return the JSON now:`;
             });
 
             if (!response.ok) {
-                throw new Error(`API request failed: ${response.status}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`API request failed: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
             }
 
             const data = await response.json();
