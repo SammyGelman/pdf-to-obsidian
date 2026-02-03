@@ -498,6 +498,18 @@
                     </div>
                 </div>
             </div>
+
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                <label style="display: flex; align-items: center; cursor: pointer; font-size: 1rem;">
+                    <input type="checkbox" id="useOfflineMode" style="width: 20px; height: 20px; margin-right: 0.75rem; cursor: pointer;">
+                    <span>
+                        <strong>🚀 Use Offline/Regex Mode</strong>
+                        <span style="display: block; font-size: 0.9rem; font-weight: 400; color: var(--text-secondary); margin-top: 0.25rem;">
+                            Extract basic metadata (title, authors, journal, keywords) using pattern matching. No API calls, works completely offline!
+                        </span>
+                    </span>
+                </label>
+            </div>
         </div>
 
         <div class="card">
@@ -599,16 +611,15 @@
                 statusDiv.className = 'api-key-status success';
                 statusDiv.textContent = `✓ API key configured: ${maskedKey}`;
                 statusDiv.style.display = 'block';
-                
-                // Enable generate button if file is uploaded
-                if (extractedText) {
-                    generateBtn.disabled = false;
-                }
             } else {
                 statusDiv.className = 'api-key-status warning';
-                statusDiv.textContent = '⚠️ No API key configured. Please enter your Anthropic API key above.';
+                statusDiv.textContent = '⚠️ No API key configured. Use offline mode or enter your Anthropic API key above.';
                 statusDiv.style.display = 'block';
-                generateBtn.disabled = true;
+            }
+            
+            // Update generate button state when API key changes
+            if (extractedText) {
+                updateGenerateButtonState();
             }
         }
 
@@ -732,6 +743,27 @@
             }
         });
 
+        // Offline mode toggle
+        const useOfflineModeCheckbox = document.getElementById('useOfflineMode');
+        useOfflineModeCheckbox.addEventListener('change', () => {
+            updateGenerateButtonState();
+        });
+
+        function updateGenerateButtonState() {
+            const useOffline = useOfflineModeCheckbox.checked;
+            const hasApiKey = !!getApiKey();
+            
+            if (extractedText) {
+                if (useOffline) {
+                    // Offline mode - always enabled if we have text
+                    generateBtn.disabled = false;
+                } else {
+                    // API mode - need API key
+                    generateBtn.disabled = !hasApiKey;
+                }
+            }
+        }
+
         // Drop zone interactions
         dropZone.addEventListener('click', () => fileInput.click());
         
@@ -780,14 +812,7 @@
             try {
                 extractedText = await extractPDFText(file);
                 showStatus(`Successfully extracted text (${extractedText.length} characters)`, 'success');
-                
-                // Only enable generate button if API key is configured
-                if (getApiKey()) {
-                    generateBtn.disabled = false;
-                } else {
-                    generateBtn.disabled = true;
-                    showStatus(`Text extracted. Please configure your API key above to generate notes.`, 'warning');
-                }
+                updateGenerateButtonState();
             } catch (error) {
                 showStatus(`Error extracting PDF: ${error.message}`, 'error');
                 generateBtn.disabled = true;
@@ -821,12 +846,20 @@
                 return;
             }
 
-            showStatus('Generating metadata with Claude AI...', 'info');
+            const useOffline = document.getElementById('useOfflineMode').checked;
+
+            showStatus(useOffline ? 'Extracting metadata using regex patterns...' : 'Generating metadata with Claude AI...', 'info');
             generateBtn.disabled = true;
             generateBtn.innerHTML = '<div class="spinner"></div><span>Processing...</span>';
 
             try {
-                const metadata = await extractMetadata(extractedText, template);
+                let metadata;
+                if (useOffline) {
+                    metadata = extractMetadataOffline(extractedText, template);
+                } else {
+                    metadata = await extractMetadata(extractedText, template);
+                }
+                
                 generatedMarkdown = formatMarkdown(metadata, template);
                 
                 preview.textContent = generatedMarkdown;
@@ -841,6 +874,168 @@
                 generateBtn.innerHTML = '<span>✨ Generate Obsidian Note</span>';
             }
         });
+
+        // =============================================================================
+        // OFFLINE/REGEX EXTRACTION MODE
+        // =============================================================================
+        function extractMetadataOffline(text, template) {
+            const metadata = {};
+            
+            // Initialize all fields as null
+            template.fields.forEach(field => {
+                metadata[field] = null;
+            });
+
+            // Title extraction - look for large text at the beginning or common patterns
+            const titlePatterns = [
+                /^([A-Z][^\n]{10,200}?)(?:\n|$)/m,  // First line if it starts with capital
+                /title[:\s]*([^\n]{10,200}?)(?:\n|$)/im,
+                /^([A-Z][A-Za-z\s,:–-]{20,200}?)(?:\n)/m
+            ];
+            
+            for (const pattern of titlePatterns) {
+                const match = text.match(pattern);
+                if (match) {
+                    metadata.title = match[1].trim().replace(/\s+/g, ' ');
+                    break;
+                }
+            }
+
+            // Authors extraction
+            const authorPatterns = [
+                /(?:authors?|by)[:\s]*([A-Z][^\n]{10,200}?)(?:\n|$)/im,
+                /([A-Z][a-z]+(?:\s+[A-Z]\.?)+(?:\s*,\s*[A-Z][a-z]+(?:\s+[A-Z]\.?)+)+)/,  // Smith J, Chen L pattern
+                /([A-Z][a-z]+\s+[A-Z][a-z]+(?:\s*,\s*[A-Z][a-z]+\s+[A-Z][a-z]+)+)/,  // John Smith, Jane Doe pattern
+            ];
+
+            for (const pattern of authorPatterns) {
+                const match = text.match(pattern);
+                if (match) {
+                    const authorText = match[1].trim();
+                    // Split by common separators
+                    metadata.authors = authorText
+                        .split(/[,;]|(?:\s+and\s+)/)
+                        .map(a => a.trim())
+                        .filter(a => a.length > 2 && a.length < 50)
+                        .slice(0, 10);  // Limit to 10 authors
+                    break;
+                }
+            }
+
+            // Year extraction - look for 4-digit years between 1950-2030
+            const yearMatch = text.match(/\b(19[5-9]\d|20[0-3]\d)\b/);
+            if (yearMatch) {
+                metadata.year = parseInt(yearMatch[1]);
+            }
+
+            // Journal/Publication extraction
+            const journalPatterns = [
+                /(?:published in|appeared in|journal)[:\s]*([A-Z][^\n]{5,100}?)(?:\n|,|$)/im,
+                /([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,5})\s+(?:Journal|Review|Proceedings|Letters|Science|Nature)/i,
+            ];
+
+            for (const pattern of journalPatterns) {
+                const match = text.match(pattern);
+                if (match) {
+                    metadata.publication = match[1].trim();
+                    break;
+                }
+            }
+
+            // Keywords extraction
+            const keywordsMatch = text.match(/(?:keywords?|index terms?)[:\s]*([^\n]{10,300}?)(?:\n\n|\n[A-Z]|$)/im);
+            if (keywordsMatch) {
+                const keywordText = keywordsMatch[1];
+                const keywords = keywordText
+                    .split(/[,;]|(?:\s*[•·]\s*)/)
+                    .map(k => k.trim().toLowerCase())
+                    .filter(k => k.length > 2 && k.length < 50)
+                    .slice(0, 8);
+                
+                metadata.tags = keywords;
+            }
+
+            // Type detection
+            const abstractMatch = text.match(/\babstract\b/im);
+            const reviewMatch = text.match(/\b(?:review|survey)\b/im);
+            const metaAnalysisMatch = text.match(/\bmeta-analysis\b/im);
+            
+            if (metaAnalysisMatch) {
+                metadata.type = 'meta-analysis';
+            } else if (reviewMatch && abstractMatch) {
+                metadata.type = 'review';
+            } else if (abstractMatch) {
+                metadata.type = 'research-article';
+            }
+
+            // Domain-specific extraction based on template
+            if (template.name === 'GNN + Medical AI (EHR)') {
+                // Look for GNN architectures
+                const gnnMatch = text.match(/\b(GCN|GAT|GraphSAGE|GIN|MPNN|GNN)s?\b/gi);
+                if (gnnMatch) {
+                    metadata['gnn-architecture'] = [...new Set(gnnMatch.map(m => m.toUpperCase()))];
+                }
+
+                // Look for datasets
+                const datasetMatch = text.match(/\b(MIMIC-III|MIMIC-IV|eICU|PhysioNet|UK Biobank)\b/gi);
+                if (datasetMatch) {
+                    metadata.dataset = [...new Set(datasetMatch)];
+                }
+
+                // Medical applications
+                const medAppMatch = text.match(/\b(diagnosis|prognosis|risk prediction|treatment recommendation|outcome prediction)\b/gi);
+                if (medAppMatch) {
+                    metadata['medical-application'] = [...new Set(medAppMatch.map(m => m.toLowerCase()))];
+                }
+            } else if (template.name === 'Machine Learning (General)') {
+                // ML methods
+                const mlMatch = text.match(/\b(neural network|deep learning|CNN|RNN|LSTM|transformer|random forest|SVM|XGBoost)\b/gi);
+                if (mlMatch) {
+                    metadata['ml-method'] = [...new Set(mlMatch)];
+                }
+
+                // Metrics
+                const metricsMatch = text.match(/\b(accuracy|precision|recall|F1|AUC|RMSE|MAE)\b/gi);
+                if (metricsMatch) {
+                    metadata.metrics = [...new Set(metricsMatch.map(m => m.toUpperCase()))];
+                }
+            } else if (template.name === 'Biology/Life Sciences') {
+                // Organism detection
+                const organismMatch = text.match(/\b(human|mouse|rat|zebrafish|drosophila|C\. elegans|E\. coli)\b/gi);
+                if (organismMatch) {
+                    metadata.organism = [...new Set(organismMatch)];
+                }
+
+                // Methods
+                const methodsMatch = text.match(/\b(PCR|sequencing|CRISPR|microscopy|Western blot|RNA-seq|ChIP-seq)\b/gi);
+                if (methodsMatch) {
+                    metadata.methods = [...new Set(methodsMatch)];
+                }
+            }
+
+            // Default read status
+            metadata['read-status'] = 'to-read';
+
+            // If no tags were found from keywords, try to extract from title/text
+            if (!metadata.tags || metadata.tags.length === 0) {
+                const commonTerms = text.toLowerCase().match(/\b[a-z]{4,20}\b/g) || [];
+                const termFreq = {};
+                commonTerms.forEach(term => {
+                    if (!['abstract', 'introduction', 'methods', 'results', 'discussion', 'conclusion', 'references', 'figure', 'table'].includes(term)) {
+                        termFreq[term] = (termFreq[term] || 0) + 1;
+                    }
+                });
+                
+                const topTerms = Object.entries(termFreq)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5)
+                    .map(([term]) => term);
+                
+                metadata.tags = topTerms;
+            }
+
+            return metadata;
+        }
 
         async function extractMetadata(text, template) {
             const apiKey = getApiKey();

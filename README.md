@@ -9,16 +9,51 @@ A beautiful, single-file web app that extracts metadata from academic PDFs and g
 
 - **🎯 One-Click Extraction**: Drop a PDF and get structured Obsidian notes instantly
 - **🤖 AI-Powered Metadata**: Uses Claude AI to intelligently extract authors, year, methods, findings, and more
+- **🚀 Offline/Regex Mode**: NEW! Extract basic metadata without API calls - works completely offline
 - **📋 Multiple Templates**: Pre-built templates for GNN/Medical AI, Machine Learning, Biology, and more
 - **🎨 Beautiful UI**: Clean, modern interface with smooth animations
 - **📦 Zero Setup**: Single HTML file - no build process, no dependencies to install
-- **🔒 Privacy-Focused**: All processing happens client-side (except AI API calls)
+- **🔒 Privacy-Focused**: All processing happens client-side (except optional AI API calls)
+
+## 🔄 Extraction Modes
+
+### AI Mode (Claude API)
+- **Most accurate** - AI understands context and nuance
+- Extracts comprehensive metadata across all template fields
+- Requires Anthropic API key
+- Uses API tokens (small cost per paper)
+- Best for: Building comprehensive literature databases
+
+### Offline/Regex Mode ⚡ NEW!
+- **Completely free** - no API calls, no tokens used
+- Works 100% offline after page load
+- Pattern-based extraction using regex
+- Extracts: title, authors, year, journal, keywords, domain-specific terms
+- Best for: Quick metadata extraction, batch processing, privacy-sensitive documents
+
+**Toggle anytime** with the checkbox in the configuration panel!
+
+### Which Mode Should I Use?
+
+| Feature | AI Mode | Offline Mode |
+|---------|---------|--------------|
+| **Cost** | ~$0.01-0.02 per paper | Free |
+| **Internet Required** | Yes (for API call) | No (after page load) |
+| **Accuracy** | Excellent - understands context | Good - pattern matching |
+| **Speed** | 2-5 seconds | Instant (<1 second) |
+| **Fields Extracted** | All template fields | Basic fields + domain terms |
+| **Privacy** | Sends text to Anthropic API | 100% local processing |
+| **Best For** | Comprehensive metadata | Quick extraction, batch work |
+
+**Pro Tip**: Use offline mode for initial extraction, then manually add details in Obsidian. Or use AI mode for important papers where accuracy matters!
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-You'll need an Anthropic API key to use this tool. Get one from [console.anthropic.com](https://console.anthropic.com/)
+**For AI Mode**: You'll need an Anthropic API key from [console.anthropic.com](https://console.anthropic.com/)
+
+**For Offline Mode**: No prerequisites! Just open the file and go.
 
 ### Option 1: Use Online (Easiest)
 
@@ -41,10 +76,12 @@ open pdf-to-obsidian.html  # or just double-click the file
 
 ## 📖 How It Works
 
-1. **Configure API Key**: Enter your Anthropic API key (or hardcode it - see below)
+1. **Configure**: Either enter your API key OR check "Use Offline Mode"
 2. **Upload**: Drag and drop a PDF or click to browse
 3. **Extract**: PDF.js extracts text from the first 10 pages
-4. **Analyze**: Claude AI analyzes the content and extracts structured metadata
+4. **Analyze**: 
+   - **AI Mode**: Claude analyzes content and extracts structured metadata
+   - **Offline Mode**: Regex patterns extract basic metadata (title, authors, year, keywords)
 5. **Generate**: Your Obsidian note is created with YAML frontmatter and template sections
 6. **Download**: Save the `.md` file directly to your Obsidian vault
 

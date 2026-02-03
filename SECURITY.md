@@ -58,6 +58,11 @@ When you hardcode your key directly in the HTML:
    - Don't use your production API key
    - Makes it easier to revoke if needed
 
+6. **Use offline mode for sensitive documents**
+   - No API calls = no data sent anywhere
+   - Perfect for confidential research or proprietary documents
+   - Toggle the "Use Offline/Regex Mode" checkbox
+
 ### ❌ DON'T:
 
 1. **Never commit your API key to Git**
@@ -99,6 +104,16 @@ If you think your API key has been exposed:
    - Contact Anthropic support if needed
 
 ## Data Privacy
+
+### Offline/Regex Mode 🔒 NEW!
+When using offline mode:
+- **Zero data is sent anywhere** - all processing happens in your browser
+- PDFs are processed locally
+- Metadata extraction uses pattern matching
+- Works completely offline (after initial page load)
+- **Best for privacy-sensitive documents**
+
+### AI Mode
 
 ### What data is sent to Anthropic:
 - Extracted text from your PDFs (first 10 pages)

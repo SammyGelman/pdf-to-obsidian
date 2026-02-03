@@ -1,6 +1,16 @@
 # Quick Start Guide 🚀
 
-## Getting Started in 4 Steps
+## Two Ways to Use This Tool
+
+### 🤖 AI Mode (Most Accurate)
+Best for comprehensive metadata extraction with high accuracy.
+
+### 🚀 Offline Mode (Fast & Free)
+Best for quick extraction without API costs. Works completely offline!
+
+---
+
+## Getting Started - AI Mode
 
 ### Step 0: Get Your API Key
 1. Go to [console.anthropic.com](https://console.anthropic.com/)
@@ -24,6 +34,48 @@
 - Download the `.md` file to your Obsidian vault
 
 That's it! 🎉
+
+---
+
+## Getting Started - Offline Mode
+
+### Step 1: Open the App
+Simply open `pdf-to-obsidian.html` in your web browser. No API key needed!
+
+### Step 2: Enable Offline Mode
+Check the box "🚀 Use Offline/Regex Mode" in the configuration panel.
+
+### Step 3: Upload Your PDF
+- Drag and drop your PDF or click to browse
+- The app will extract text from the first 10 pages
+
+### Step 4: Generate & Download
+- Click "Generate Obsidian Note"
+- Instant extraction using pattern matching
+- Download the `.md` file to your Obsidian vault
+
+That's it - completely free and offline! 🎉
+
+---
+
+---
+
+## Which Mode Should I Use?
+
+**Use AI Mode if:**
+- ✅ You want the most accurate metadata extraction
+- ✅ You need all template fields filled comprehensively
+- ✅ You're building a serious literature database
+- ✅ A few cents per paper is worth the accuracy
+
+**Use Offline Mode if:**
+- ✅ You want instant results (no waiting)
+- ✅ You're processing many papers and want to save on API costs
+- ✅ You need complete privacy (no data sent anywhere)
+- ✅ You're offline or have unreliable internet
+- ✅ You'll manually fill in details later anyway
+
+**Pro Tip**: You can switch between modes anytime! Try offline mode first, then use AI mode for papers that need more detail.
 
 ---
 
@@ -84,6 +136,23 @@ For multiple papers:
 
 ### Want to hardcode your key?
 Click the "Want to hardcode your key?" button in the configuration panel for detailed instructions. This is great for personal use!
+
+### Offline Mode Issues
+
+**"Generate button is disabled"**
+- Make sure you've uploaded a PDF file
+- If in AI mode, you need an API key configured
+- If in Offline mode, the button should enable automatically after upload
+
+**"Metadata is incomplete in offline mode"**
+- This is normal! Offline mode extracts basic fields using patterns
+- You can manually add missing information in Obsidian
+- Or switch to AI mode for that specific paper
+
+**"Results are better/worse than expected"**
+- Offline mode works best with well-formatted academic PDFs
+- PDFs with clear title pages, author lists, and keywords sections work best
+- Scanned PDFs or unusual formats may have less accurate extraction
 
 ### "Error extracting PDF"
 - Make sure it's a valid PDF file
